@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import bcrypt from 'bcryptjs';
 import { getDb, saveDb } from './db.js';
+import adminRouter from './admin.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -37,13 +38,36 @@ const upload = multer({
     },
 });
 
+// ---- 认证中间件：验证 userId 是否为有效注册用户 ----
+async function requireUser(req, res, next) {
+    const userId = req.body.userId || req.query.userId;
+    if (!userId || userId === 0) {
+        return res.status(401).json({ error: '未登录用户不能执行此操作' });
+    }
+    try {
+        const db = await getDb();
+        const stmt = db.prepare('SELECT id FROM users WHERE id = ?');
+        stmt.bind([Number(userId)]);
+        if (!stmt.step()) {
+            stmt.free();
+            return res.status(403).json({ error: '用户不存在或已失效' });
+        }
+        stmt.free();
+        next();
+    } catch (err) {
+        console.error('认证失败:', err);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+}
+
 // ---- middleware ----
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(UPLOAD_DIR));
+app.use('/api/admin', adminRouter);
 
 // ---- 图片上传 ----
-app.post('/api/upload', upload.array('images', 9), (req, res) => {
+app.post('/api/upload', requireUser, upload.array('images', 9), (req, res) => {
     if (!req.files || req.files.length === 0) {
         return res.status(400).json({ error: '未选择文件' });
     }
@@ -191,7 +215,7 @@ app.get('/api/recipes/:id', async (req, res) => {
     }
 });
 
-app.post('/api/recipes', async (req, res) => {
+app.post('/api/recipes', requireUser, async (req, res) => {
     try {
         const { userId, id, name, category, ingredients, steps, notes, images } = req.body;
         if (!userId || !id || !name) return res.status(400).json({ error: '缺少必填字段' });
@@ -210,9 +234,10 @@ app.post('/api/recipes', async (req, res) => {
     }
 });
 
-app.put('/api/recipes/:id', async (req, res) => {
+app.put('/api/recipes/:id', requireUser, async (req, res) => {
     try {
-        const { name, category, ingredients, steps, notes, images } = req.body;
+        const { userId, name, category, ingredients, steps, notes, images } = req.body;
+        if (!userId) return res.status(400).json({ error: '缺少用户信息' });
         const db = await getDb();
         const result = db.run(
             'UPDATE recipes SET name = ?, category = ?, ingredients = ?, steps = ?, notes = ?, images = ? WHERE id = ?',
@@ -228,8 +253,10 @@ app.put('/api/recipes/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/recipes/:id', async (req, res) => {
+app.delete('/api/recipes/:id', requireUser, async (req, res) => {
     try {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: '缺少用户信息' });
         const db = await getDb();
         const stmt = db.prepare('SELECT images FROM recipes WHERE id = ?');
         stmt.bind([req.params.id]);
@@ -253,7 +280,7 @@ app.delete('/api/recipes/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/upload/:filename', async (req, res) => {
+app.delete('/api/upload/:filename', requireUser, async (req, res) => {
     try {
         const filePath = path.join(UPLOAD_DIR, req.params.filename);
         try { fs.unlinkSync(filePath); } catch { /* ignore */ }

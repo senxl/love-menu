@@ -2,20 +2,21 @@ import React, { useState } from 'react';
 import LoginPage from './components/LoginPage';
 import RecipeApp from './components/RecipeApp';
 import SharedRecipePage from './components/SharedRecipePage';
+import AdminPage from './components/AdminPage';
 import { getCurrentUser, setCurrentUser, clearCurrentUser } from './storage';
 
 type User = { id: number; username: string; isGuest?: boolean };
 
-// 检查是否有分享链接参数
-function getSharedRecipeId(): string | null {
+// 检查 URL 参数
+function getQueryParam(name: string): string | null {
     if (typeof window === 'undefined') return null;
-    const params = new URLSearchParams(window.location.search);
-    return params.get('recipe');
+    return new URLSearchParams(window.location.search).get(name);
 }
 
 const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(() => getCurrentUser());
-    const sharedId = getSharedRecipeId();
+    const [adminMode, setAdminMode] = useState(() => getQueryParam('admin') === '1');
+    const sharedId = getQueryParam('recipe');
 
     const handleLogin = (userData: User) => {
         setCurrentUser(userData);
@@ -38,6 +39,11 @@ const App: React.FC = () => {
         window.history.replaceState({}, '', window.location.pathname);
         window.location.reload();
     };
+
+    // 优先显示管理后台
+    if (adminMode) {
+        return <AdminPage onBack={() => setAdminMode(false)} />;
+    }
 
     // 优先显示分享的菜谱（无需登录）
     if (sharedId) {

@@ -240,7 +240,6 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({ open, onClose, onSave, 
                             onChange={(e) => updateField('name', e.target.value)}
                             size="large"
                             status={errors.name ? 'error' : undefined}
-                            prefix={<Icon name="icon-diy" size={16} />}
                         />
                         {errors.name && <ErrorText text={errors.name} />}
                     </div>

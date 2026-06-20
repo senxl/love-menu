@@ -45,11 +45,19 @@ export async function login(username: string, password: string): Promise<{ id: n
 
 /* ---------- 图片上传 API ---------- */
 
+function getUserIdOrThrow(): number {
+    const user = getCurrentUser();
+    if (!user || user.id === 0) throw new Error('未登录用户不能上传');
+    return user.id;
+}
+
 export async function uploadImages(files: File[]): Promise<UploadedImage[]> {
+    const userId = getUserIdOrThrow();
     const formData = new FormData();
     files.forEach((f) => formData.append('images', f));
+    formData.append('userId', String(userId));
 
-    const res = await fetch(`${API_BASE}/upload`, {
+    const res = await fetch(`${API_BASE}/upload?userId=${userId}`, {
         method: 'POST',
         body: formData,
     });
@@ -59,7 +67,9 @@ export async function uploadImages(files: File[]): Promise<UploadedImage[]> {
 }
 
 export async function deleteImage(filename: string): Promise<void> {
-    await fetch(`${API_BASE}/upload/${filename}`, { method: 'DELETE' });
+    const user = getCurrentUser();
+    if (!user || (user as any).isGuest || user.id === 0) return;
+    await fetch(`${API_BASE}/upload/${filename}?userId=${user.id}`, { method: 'DELETE' });
 }
 
 /* ---------- 菜谱 API ---------- */
@@ -83,14 +93,17 @@ export async function addRecipe(userId: number, recipe: Recipe): Promise<void> {
 }
 
 export async function updateRecipe(recipeId: string, data: Partial<Recipe>): Promise<void> {
+    const user = getCurrentUser();
     await apiCall(`/recipes/${recipeId}`, {
         method: 'PUT',
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, userId: user?.id }),
     });
 }
 
 export async function deleteRecipe(recipeId: string): Promise<void> {
+    const user = getCurrentUser();
     await apiCall(`/recipes/${recipeId}`, {
         method: 'DELETE',
+        body: JSON.stringify({ userId: user?.id }),
     });
 }

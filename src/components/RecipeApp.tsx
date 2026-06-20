@@ -242,21 +242,21 @@ const RecipeApp: React.FC<RecipeAppProps> = ({ user, onLogout }) => {
                         <span style={{ fontSize: 13, color: '#8b7a62' }}>
                             👤 {user.username}
                         </span>
-                        <button
-                            type="button"
-                            onClick={onLogout}
-                            style={{
-                                padding: '2px 8px',
-                                borderRadius: 10,
-                                border: '1px solid #d4c5b0',
-                                background: 'transparent',
-                                color: '#a09080',
-                                fontSize: 12,
-                                cursor: 'pointer',
-                            }}
-                        >
-                            退出
-                        </button>
+                            <button
+                                type="button"
+                                onClick={onLogout}
+                                style={{
+                                    padding: '2px 8px',
+                                    borderRadius: 10,
+                                    border: '1px solid #d4c5b0',
+                                    background: 'transparent',
+                                    color: '#a09080',
+                                    fontSize: 12,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                退出
+                            </button>
                     </div>
                 </div>
             </div>
@@ -358,7 +358,7 @@ const RecipeApp: React.FC<RecipeAppProps> = ({ user, onLogout }) => {
                                     ? '没有找到匹配的菜谱 🧐'
                                     : '还没有菜谱呢，快添加第一个吧！ 🎉'}
                             </p>
-                            {!searchText && activeTab === 'all' && (
+                            {!isGuest && !searchText && activeTab === 'all' && (
                                 <Button
                                     type="primary"
                                     onClick={() => setAddOpen(true)}

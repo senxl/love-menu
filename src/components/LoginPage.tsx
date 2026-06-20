@@ -189,6 +189,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onGuest }) => {
                         <p style={{ marginTop: 20, fontSize: 12, color: '#a09080' }}>
                             🔒 登录用户可管理菜谱，游客仅可浏览
                         </p>
+
                     </div>
                 </form>
             </Card>
