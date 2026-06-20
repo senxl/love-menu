@@ -1,0 +1,7 @@
+node_modules/
+.vite/
+dist/
+*.db
+.DS_Store
+.reasonix/
+
