@@ -101,6 +101,7 @@ const SharedRecipePage: React.FC<SharedRecipePageProps> = ({ recipeId, onBack })
                 )}
 
                 <div style={{ textAlign: 'center', padding: '20px 0', color: '#a09080', fontSize: 13 }}>
+                    {recipe.createdBy && <span>👤 {recipe.createdBy} · </span>}
                     来自 菜谱小岛 的分享
                 </div>
             </div>

@@ -143,6 +143,8 @@ const AdminDashboard: React.FC<AdminPageProps> = ({ onBack }) => {
     }, [tab, loadUsers, loadRecipes]);
 
     // ---- 用户 CRUD ----
+    const [passwordUserId, setPasswordUserId] = useState<{ id: number; username: string } | null>(null);
+
     const handleDeleteUser = async (id: number, username: string) => {
         if (!window.confirm(`确定删除用户「${username}」及其所有菜谱吗？`)) return;
         try {
@@ -264,7 +266,10 @@ const AdminDashboard: React.FC<AdminPageProps> = ({ onBack }) => {
                                     u.id,
                                     <span style={{ color: '#fff', fontWeight: 600 }}>{u.username}</span>,
                                     u.createdAt,
-                                    <Btn danger onClick={() => handleDeleteUser(u.id, u.username)}>删除</Btn>,
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                        <Btn onClick={() => setPasswordUserId({ id: u.id, username: u.username })}>修改密码</Btn>
+                                        <Btn danger onClick={() => handleDeleteUser(u.id, u.username)}>删除</Btn>
+                                    </div>,
                                 ],
                             }))}
                         />
@@ -297,6 +302,14 @@ const AdminDashboard: React.FC<AdminPageProps> = ({ onBack }) => {
                     </>
                 )}
             </div>
+
+            {/* 修改密码弹窗 */}
+            {passwordUserId && (
+                <PasswordModal
+                    user={passwordUserId}
+                    onClose={() => setPasswordUserId(null)}
+                />
+            )}
 
             {/* 添加用户弹窗 */}
             {showUserModal && (
@@ -526,6 +539,56 @@ const inputStyle: React.CSSProperties = {
 const modalBtnStyle: React.CSSProperties = {
     padding: '8px 20px', borderRadius: 8, border: 'none',
     fontSize: 14, cursor: 'pointer',
+};
+
+/* ========== 修改密码弹窗 ========== */
+const PasswordModal: React.FC<{
+    user: { id: number; username: string };
+    onClose: () => void;
+}> = ({ user, onClose }) => {
+    const [password, setPassword] = useState('');
+    const [confirm, setConfirm] = useState('');
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async () => {
+        if (!password || password.length < 4) { setError('密码至少 4 个字符'); return; }
+        if (password !== confirm) { setError('两次密码输入不一致'); return; }
+        setSaving(true); setError('');
+        try {
+            await adminApi(`/users/${user.id}/password`, {
+                method: 'PUT',
+                body: JSON.stringify({ password }),
+            });
+            onClose();
+            window.location.reload();
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <ModalOverlay onClose={onClose}>
+            <ModalPanel title={`🔑 修改密码 — ${user.username}`} onClose={onClose}>
+                <input type="password" placeholder="新密码（至少 4 位）" value={password}
+                    onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                    style={inputStyle} autoFocus />
+                <input type="password" placeholder="确认新密码" value={confirm}
+                    onChange={(e) => { setConfirm(e.target.value); setError(''); }}
+                    style={inputStyle} />
+                {error && <p style={{ color: '#e74c3c', fontSize: 13, margin: '0 0 10px' }}>{error}</p>}
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                    <button type="button" onClick={onClose} style={modalBtnStyle}>取消</button>
+                    <button type="button" onClick={handleSubmit} disabled={saving}
+                        style={{ ...modalBtnStyle, background: '#e74c3c', color: '#fff', fontWeight: 700 }}>
+                        {saving ? '修改中…' : '确认修改'}
+                    </button>
+                </div>
+            </ModalPanel>
+        </ModalOverlay>
+    );
 };
 
 export default AdminPage;

@@ -90,6 +90,25 @@ router.delete('/users/:id', requireAdmin, async (req, res) => {
     }
 });
 
+// 修改用户密码
+router.put('/users/:id/password', requireAdmin, async (req, res) => {
+    try {
+        const { password } = req.body;
+        if (!password || password.length < 4) return res.status(400).json({ error: '密码至少 4 个字符' });
+
+        const db = await getDb();
+        const salt = bcrypt.genSaltSync(10);
+        const hashed = bcrypt.hashSync(password, salt);
+        const result = db.run('UPDATE users SET password = ? WHERE id = ?', [hashed, Number(req.params.id)]);
+        if (result.changes === 0) return res.status(404).json({ error: '用户不存在' });
+        saveDb();
+        res.json({ success: true, message: '密码已更新' });
+    } catch (err) {
+        console.error('修改密码失败:', err);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
 // 创建用户
 router.post('/users', requireAdmin, async (req, res) => {
     try {

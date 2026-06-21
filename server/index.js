@@ -152,12 +152,12 @@ app.get('/api/recipes', async (req, res) => {
         let stmt;
         if (userId) {
             stmt = db.prepare(
-                'SELECT id, user_id, name, category, ingredients, steps, notes, images, created_at FROM recipes WHERE user_id = ? ORDER BY created_at DESC'
+                'SELECT r.id, r.user_id, u.username, r.name, r.category, r.ingredients, r.steps, r.notes, r.images, r.created_at FROM recipes r LEFT JOIN users u ON r.user_id = u.id WHERE r.user_id = ? ORDER BY r.created_at DESC'
             );
             stmt.bind([Number(userId)]);
         } else {
             stmt = db.prepare(
-                'SELECT id, user_id, name, category, ingredients, steps, notes, images, created_at FROM recipes ORDER BY created_at DESC'
+                'SELECT r.id, r.user_id, u.username, r.name, r.category, r.ingredients, r.steps, r.notes, r.images, r.created_at FROM recipes r LEFT JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC'
             );
             stmt.bind();
         }
@@ -167,6 +167,7 @@ app.get('/api/recipes', async (req, res) => {
             const row = stmt.getAsObject();
             recipes.push({
                 id: row.id,
+                createdBy: row.username || '(游客)',
                 name: row.name,
                 category: row.category,
                 ingredients: row.ingredients,
@@ -188,7 +189,7 @@ app.get('/api/recipes', async (req, res) => {
 app.get('/api/recipes/:id', async (req, res) => {
     try {
         const db = await getDb();
-        const stmt = db.prepare('SELECT id, user_id, name, category, ingredients, steps, notes, images, created_at FROM recipes WHERE id = ?');
+        const stmt = db.prepare('SELECT r.id, r.user_id, u.username, r.name, r.category, r.ingredients, r.steps, r.notes, r.images, r.created_at FROM recipes r LEFT JOIN users u ON r.user_id = u.id WHERE r.id = ?');
         stmt.bind([req.params.id]);
         if (!stmt.step()) {
             stmt.free();
@@ -200,6 +201,7 @@ app.get('/api/recipes/:id', async (req, res) => {
             success: true,
             recipe: {
                 id: row.id,
+                createdBy: row.username || '(游客)',
                 name: row.name,
                 category: row.category,
                 ingredients: row.ingredients,

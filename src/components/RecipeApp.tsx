@@ -706,8 +706,9 @@ const RecipeApp: React.FC<RecipeAppProps> = ({ user, onLogout }) => {
                                     </div>
                                 )}
 
-                                {/* 创建时间 */}
+                                {/* 作者 + 创建时间 */}
                                 <div style={{ textAlign: 'center', padding: '20px 0 40px', color: '#a09080', fontSize: 13 }}>
+                                    {viewTarget.createdBy && <span>👤 {viewTarget.createdBy} · </span>}
                                     创建于 {viewTarget.createdAt}
                                 </div>
                             </div>

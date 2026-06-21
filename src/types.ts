@@ -5,6 +5,7 @@ export interface UploadedImage {
 
 export interface Recipe {
     id: string;
+    createdBy?: string;
     name: string;
     category: string;
     ingredients: string;
