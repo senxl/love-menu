@@ -284,8 +284,8 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({ open, onClose, onSave, 
                                 ✏️ 自定义
                             </button>
                         </div>
-                        {/* 自定义输入框 — 仅用户点击「自定义」按钮时显示 */}
-                        {form.category === '__custom__' ? (
+                        {/* 自定义输入框 — 点击「自定义」按钮或正在输入时显示 */}
+                        {(form.category === '__custom__' || customCatInput) ? (
                             <div ref={emojiPickerRef} style={{ position: 'relative' }}>
                                 <Input
                                     placeholder="输入自定义分类名称，例如：烤箱菜"
