@@ -19,18 +19,26 @@
 
 ### 🔗 分享功能
 - **生成分享链接** — 一键分享菜谱给朋友（支持 Web Share API）
-- **分享页** — 无需登录即可查看分享的菜谱
+- **分享页** — 无需登录即可查看分享的菜谱（含作者信息）
 
 ### 👤 用户系统
 - **注册/登录** — 用户名+密码认证
 - **游客浏览** — 无需登录即可浏览所有菜谱
 - **密码加密** — 使用 bcryptjs 安全存储
+- **后端鉴权** — 所有写操作（增/删/改/上传）验证用户身份，游客/未登录用户无法操作
+
+### ⚙️ 管理后台
+- **独立入口** — 通过 `?admin=1` URL 参数访问
+- **密码保护** — 独立的管理员密码登录
+- **用户管理** — 查看用户列表、添加用户、修改密码、删除用户（连带菜谱）
+- **菜谱管理** — 查看所有菜谱（含作者）、添加菜谱（为任意用户）、编辑菜谱、删除菜谱
 
 ### 🎨 界面特点
 - 温暖手绘风格 UI（基于 `animal-island-ui`）
 - 响应式适配移动端
 - 全中文界面与提示
 - 菜谱卡片图片背景沉浸展示
+- 详情页显示菜谱作者
 
 ## 🏗️ 技术栈
 
@@ -48,27 +56,30 @@
 
 ```
 love-menu/
-├── index.html              # 前端入口 HTML
-├── package.json            # 前端依赖配置
-├── vite.config.ts          # Vite 配置（含 API 代理）
-├── tsconfig.json           # TypeScript 配置
+├── index.html                # 前端入口 HTML
+├── package.json              # 前端依赖配置
+├── vite.config.ts            # Vite 配置（含 API 代理）
+├── tsconfig.json             # TypeScript 配置
 ├── .gitignore
-├── src/                    # 前端源码
-│   ├── main.tsx            # 应用入口
-│   ├── App.tsx             # 根组件（路由/登录态管理）
-│   ├── types.ts            # 类型定义 & 分类常量
-│   ├── storage.ts          # API 调用封装
+├── README.md
+├── src/                      # 前端源码
+│   ├── main.tsx              # 应用入口
+│   ├── App.tsx               # 根组件（路由/登录态管理）
+│   ├── types.ts              # 类型定义 & 分类常量
+│   ├── storage.ts            # API 调用封装
 │   └── components/
-│       ├── LoginPage.tsx       # 登录/注册页
-│       ├── RecipeApp.tsx       # 主页面（菜谱列表/详情）
-│       ├── RecipeCard.tsx      # 菜谱卡片（网格视图）
-│       ├── AddRecipeModal.tsx  # 添加/编辑菜谱弹窗
-│       └── SharedRecipePage.tsx # 分享查看页
-└── server/                 # 后端
-    ├── index.js            # Express 服务（API 路由）
-    ├── db.js               # SQLite 数据库初始化
-    ├── package.json        # 后端依赖配置
-    └── uploads/            # 图片上传存储目录
+│       ├── LoginPage.tsx         # 登录/注册页
+│       ├── RecipeApp.tsx         # 主页面（菜谱列表/详情）
+│       ├── RecipeCard.tsx        # 菜谱卡片（网格视图）
+│       ├── AddRecipeModal.tsx    # 添加/编辑菜谱弹窗
+│       ├── SharedRecipePage.tsx  # 分享查看页
+│       └── AdminPage.tsx         # 管理后台
+└── server/                   # 后端
+    ├── index.js              # Express 服务（API 路由）
+    ├── admin.js              # 管理后台 API
+    ├── db.js                 # SQLite 数据库初始化
+    ├── package.json          # 后端依赖配置
+    └── uploads/              # 图片上传存储目录
 ```
 
 ## 🚀 快速启动
@@ -125,6 +136,7 @@ Vite 会自动将 `/api/*` 和 `/uploads/*` 请求代理到后端 `localhost:300
 - 菜谱名称与分类
 - 居中大图展示（多张纵向排列）
 - 食材清单、制作步骤、备注
+- 作者信息与创建时间
 - 分享/编辑/删除操作
 
 ### 添加/编辑菜谱
@@ -135,6 +147,28 @@ Vite 会自动将 `/api/*` 和 `/uploads/*` 请求代理到后端 `localhost:300
 - 食材清单（必填）
 - 制作步骤（必填）
 - 备注（可选）
+
+### ⚙️ 管理后台
+
+访问 `http://localhost:5173/?admin=1` 进入。
+
+**👤 用户管理**
+| 操作 | 说明 |
+|------|------|
+| 查看 | 所有注册用户列表（ID、用户名、注册时间） |
+| 添加 | 创建新用户（用户名 + 密码） |
+| 修改密码 | 重置任意用户的密码 |
+| 删除 | 删除用户及其所有菜谱 |
+
+**🍳 菜谱管理**
+| 操作 | 说明 |
+|------|------|
+| 查看 | 所有菜谱列表（名称、作者、分类、食材预览、图片数、时间） |
+| 添加 | 为任意用户创建菜谱 |
+| 编辑 | 修改菜谱的名称、分类、食材、步骤、备注 |
+| 删除 | 删除菜谱及关联图片 |
+
+> 默认管理员密码：`admin888`（可在 `server/admin.js` 中修改）
 
 ## 🗂️ 分类系统
 
@@ -151,19 +185,47 @@ Vite 会自动将 `/api/*` 和 `/uploads/*` 请求代理到后端 `localhost:300
 
 支持创建**自定义分类**，可带 emoji 图标（如：🥬 小小、🧆 空气炸锅）。
 
+## 🔒 安全机制
+
+- **用户密码** — bcrypt 加盐哈希存储
+- **API 鉴权** — 所有写操作（添加/编辑/删除/上传）需验证有效 `userId`
+- **游客隔离** — 游客（`userId=0`）被后端拒绝所有写操作
+- **管理后台** — 独立密码保护，Token 存储在 `sessionStorage`
+
 ## 📡 API 接口
+
+### 公开 API
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | POST | `/api/register` | 用户注册 |
 | POST | `/api/login` | 用户登录 |
 | GET | `/api/recipes` | 获取菜谱列表（支持 `?userId=` 筛选） |
-| GET | `/api/recipes/:id` | 获取单个菜谱 |
+| GET | `/api/recipes/:id` | 获取单个菜谱（含作者信息） |
+
+### 需认证 API（需 body 中携带有效 `userId`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
 | POST | `/api/recipes` | 添加菜谱 |
 | PUT | `/api/recipes/:id` | 更新菜谱 |
 | DELETE | `/api/recipes/:id` | 删除菜谱 |
 | POST | `/api/upload` | 上传图片（multipart） |
 | DELETE | `/api/upload/:filename` | 删除图片 |
+
+### 管理 API（需 `x-admin-token` 头）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/admin/login` | 管理员登录 |
+| GET | `/api/admin/users` | 获取所有用户 |
+| POST | `/api/admin/users` | 创建用户 |
+| PUT | `/api/admin/users/:id/password` | 修改用户密码 |
+| DELETE | `/api/admin/users/:id` | 删除用户 |
+| GET | `/api/admin/recipes` | 获取所有菜谱 |
+| POST | `/api/admin/recipes` | 添加菜谱 |
+| PUT | `/api/admin/recipes/:id` | 编辑菜谱 |
+| DELETE | `/api/admin/recipes/:id` | 删除菜谱 |
 
 ## 🧩 开发
 
