@@ -14,6 +14,12 @@ const app = express();
 const PORT = 3001;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 
+// 自动创建 uploads 目录
+if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    console.log('📁 已创建 uploads 目录');
+}
+
 // ---- multer 配置 ----
 const storage = multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
