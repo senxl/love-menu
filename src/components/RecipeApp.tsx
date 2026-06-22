@@ -104,15 +104,28 @@ const RecipeApp: React.FC<RecipeAppProps> = ({ user, onLogout }) => {
 
     const handleShare = async (recipe: Recipe) => {
         const url = `${window.location.origin}${'?recipe='}${recipe.id}`;
+        // iOS Safari 需要 HTTPS 才能用 Web Share API，HTTP 下 fallback 到传统复制
         try {
             if (navigator.share) {
                 await navigator.share({ title: recipe.name, text: `查看菜谱：${recipe.name}`, url });
-            } else {
-                await navigator.clipboard.writeText(url);
-                alert('链接已复制到剪贴板！');
+                return;
             }
         } catch {
-            // 用户取消分享则不处理
+            // 用户取消或不支持，继续走复制
+        }
+        // 传统复制方式（兼容 HTTP / iOS）
+        try {
+            const input = document.createElement('input');
+            input.value = url;
+            input.style.position = 'fixed';
+            input.style.opacity = '0';
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            alert('分享链接已复制！');
+        } catch {
+            alert(`请手动复制链接：${url}`);
         }
     };
 

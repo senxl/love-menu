@@ -64,14 +64,16 @@ const SharedRecipePage: React.FC<SharedRecipePageProps> = ({ recipeId, onBack })
                     </span>
                 </div>
 
-                {/* 图片 */}
+                {/* 图片画廊 — 居中大图展示（与详情页一致） */}
                 {recipe.images && recipe.images.length > 0 && (
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
-                        {recipe.images.map((img) => (
-                            <div key={img.filename} style={{ width: 140, height: 140, borderRadius: 14, overflow: 'hidden', border: '2px solid #d4c5b0', background: '#f5f0e8' }}>
-                                <img src={img.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            </div>
-                        ))}
+                    <div style={{ marginBottom: 24 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                            {recipe.images.map((img) => (
+                                <div key={img.filename} style={{ width: '100%', maxWidth: 600, borderRadius: 14, overflow: 'hidden', border: '2px solid #d4c5b0', background: '#f5f0e8' }}>
+                                    <img src={img.url} alt="" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 

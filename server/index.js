@@ -14,10 +14,9 @@ const app = express();
 const PORT = 3001;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 
-// 自动创建 uploads 目录
+// 确保上传目录存在
 if (!fs.existsSync(UPLOAD_DIR)) {
     fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    console.log('📁 已创建 uploads 目录');
 }
 
 // ---- multer 配置 ----
@@ -64,6 +63,13 @@ async function requireUser(req, res, next) {
         console.error('认证失败:', err);
         res.status(500).json({ error: '服务器内部错误' });
     }
+}
+
+// ---- 静态文件：服务前端构建产物 ----
+const distDir = path.resolve(__dirname, '..', 'dist');
+if (fs.existsSync(distDir)) {
+    app.use(express.static(distDir));
+    console.log('📦 前端静态文件已加载');
 }
 
 // ---- middleware ----
@@ -301,6 +307,15 @@ app.delete('/api/upload/:filename', requireUser, async (req, res) => {
 function safeParseJson(str, fallback) {
     if (!str) return fallback;
     try { return JSON.parse(str); } catch { return fallback; }
+}
+
+// ---- SPA fallback：非 /api 请求返回 index.html（放在最后，不影响 API 和静态文件） ----
+if (fs.existsSync(distDir)) {
+    app.get('*', (req, res, next) => {
+        if (req.path.startsWith('/api')) return next();
+        if (req.path.startsWith('/uploads')) return next();
+        res.sendFile(path.join(distDir, 'index.html'));
+    });
 }
 
 app.listen(PORT, () => {
